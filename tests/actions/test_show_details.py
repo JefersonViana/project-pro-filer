@@ -1,4 +1,5 @@
 from pro_filer.actions.main_actions import show_details  # NOQA
+from datetime import datetime
 # import pytest
 
 # BASE_URL = ("/home/jeferson-viana/TRYBE/projetos/"
@@ -49,15 +50,23 @@ from pro_filer.actions.main_actions import show_details  # NOQA
 def test_show_details_with_directory(capsys, tmp_path):
     directory = tmp_path / "projetos"
     directory.mkdir()
+    date = directory.stat().st_mtime
+    data_modificacao = datetime.fromtimestamp(date)
+    day = data_modificacao.date().day
+    month = data_modificacao.date().month
+    year = data_modificacao.date().year
+    size = directory.stat().st_size
     context = {
         "base_path": directory.as_posix()
     }
     show_details(context)
     captured = capsys.readouterr()
-    assert captured.out == ("File name: projetos\nFile size in bytes: 4096\n"
+    assert captured.out == ("File name: projetos\n"
+                            f"File size in bytes: {size}\n"
                             "File type: directory\n"
                             "File extension: [no extension]\n"
-                            "Last modified date: 2023-10-24\n")
+                            "Last modified date:"
+                            f" {year}-{month}-{day}\n")
 
 
 def test_show_details_with_file(capsys, tmp_path):
