@@ -37,15 +37,16 @@ def test_show_details(capsys, context, result):
 
 def test_show_details_with_tmp_path(capsys, tmp_path):
     out_put = tmp_path / "out.json"
+    teste = out_put.as_posix().split("/")[3]
     with open(out_put, "w", encoding="utf-8") as file:
         file.write(json.dumps({"chave": "value"}))
     context = {
-        "all_files": ["/tmp/pytest-of-jeferson-viana/pytest-5"
-                      "/test_show0/out.json"]
+        "all_files": [f"/tmp/pytest-of-jeferson-viana/{teste}"
+                      "/test_show_details_with_tmp_pat0/out.json"]
     }
     show_disk_usage(context)
     captured = capsys.readouterr()
-    result = ("'/tmp/pytest-of-jeferson-viana/pytest-5/test_show0/out.json'"
-              ":          18 (100%)\n"
+    result = ("'/tmp/pytest-of-jeferson-via...details_with_tmp_pat0/out.json'"
+              ":        18 (100%)\n"
               "Total size: 18\n")
     assert captured.out == result
