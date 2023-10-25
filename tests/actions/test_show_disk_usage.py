@@ -1,6 +1,6 @@
 from pro_filer.actions.main_actions import show_disk_usage  # NOQA
 import pytest
-import json
+from unittest.mock import Mock, patch
 
 
 @pytest.mark.parametrize(
@@ -35,18 +35,50 @@ def test_show_details(capsys, context, result):
     assert captured.out == result
 
 
-def test_show_details_with_tmp_path(capsys, tmp_path):
-    out_put = tmp_path / "out.json"
-    teste = out_put.as_posix().split("/")[3]
-    with open(out_put, "w", encoding="utf-8") as file:
-        file.write(json.dumps({"chave": "value"}))
+def test_show_disk_with_tmp_path(capsys, tmp_path):
+    file_emails = tmp_path / "emails.json"
+    file_users = tmp_path / "users.json"
+    CONTENT_EMAILS = '{"emails": ["email_fake", "email_fake", "email_fake"]}'
+    CONTENT_USERS = '{"users": ["name_fake", "name_fake"]}'
+    file_emails.write_text(CONTENT_EMAILS)
+    file_users.write_text(CONTENT_USERS)
+    # with open(file_emails.as_posix().split("/")[-1], "w") as file:
+    #     json.dump({"emails": ["email_fake", "email_fake",
+    # "email_fake"]}, file)
+
+    #  CÓDIGO PRECISANDO SER REVISTO.
+    # with open(file_users, "w") as file:
+    #     json.dump({"users": ["name_fake", "name_fake"]}, file)
+
     context = {
-        "all_files": [f"/tmp/pytest-of-jeferson-viana/{teste}"
-                      "/test_show_details_with_tmp_pat0/out.json"]
+        "all_files": [
+            file_emails.as_posix(),
+            file_users.as_posix()
+        ]
     }
-    show_disk_usage(context)
-    captured = capsys.readouterr()
-    result = ("'/tmp/pytest-of-jeferson-via...details_with_tmp_pat0/out.json'"
-              ":        18 (100%)\n"
-              "Total size: 18\n")
-    assert captured.out == result
+    mock_return_from_get_printable = Mock(
+        return_value=("/tmp/pytest-of-jeferson-via.../"
+                      "test_show_disk_with_tmp_path0")
+    )
+    with patch(
+        "pro_filer.actions.main_actions._get_printable_file_path",
+        mock_return_from_get_printable
+    ):
+        show_disk_usage(context)
+        captured = capsys.readouterr()
+        assert captured.out == (
+            "'/tmp/pytest-of-jeferson-via.../test_show_disk_with_tmp_path0':"
+            "        54 (59%)\n"
+            "'/tmp/pytest-of-jeferson-via.../test_show_disk_with_tmp_path0':"
+            "        37 (40%)\n"
+            "Total size: 91\n"
+        )
+
+        captured = capsys.readouterr()
+        assert captured.out != (
+            "'/tmp/pytest-of-jeferson-via.../test_show_disk_with_tmp_path0':"
+            "        37 (40%)\n"
+            "'/tmp/pytest-of-jeferson-via.../test_show_disk_with_tmp_path0':"
+            "        54 (59%)\n"
+            "Total size: 91\n"
+        )
